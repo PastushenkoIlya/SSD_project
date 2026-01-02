@@ -14,7 +14,7 @@ public class Server {
     // Usamos el puerto 5050 para el cliente y el servidor, como en las practicas
     private static final int PUERTO = 5050;
 
-   // HashMap para guardar las tareas
+   // HashMap para guardar las tareas (id y tarea)
     private static Map<Integer, Task> tasks = new HashMap<>();
 
     // Para asignar Ids a las tareas
@@ -31,10 +31,11 @@ public class Server {
         // Servidor escuchando por el puerto 5050 y creacion de server socket
         try (ServerSocket serverSocket = new ServerSocket(PUERTO)) {
 
+            // Bucle infinito porque el servido debe estar siempre escuchando
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Cliente conectado");
-
+                // Se crea un hilo para atender al cliente
                 pool.execute(new ClientHandler(clientSocket));
             }
 
@@ -44,6 +45,9 @@ public class Server {
     }
 
     // METODOS PARA GESTIONAR LAS TAREAS
+    
+    // Tenemos que usar synchronized para evitar problemas de concurrencia
+    // (como que varios clientes creen y borren tareas al mismo tiempo)
 
     // Generar id unico para cada tarea
     public static synchronized int generarTaskId() {
