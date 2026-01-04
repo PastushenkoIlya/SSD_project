@@ -14,7 +14,7 @@ import java.util.Scanner;
 public class Client {
 
     private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 5000;
+    private static final int SERVER_PORT = 5050;
 
     private final Socket socket;
     private final ObjectOutputStream out;
