@@ -73,7 +73,7 @@ public class Client implements Runnable {
         printTaskList(response);
     }
 
-    private void filterTasks() throws IOException, ClassNotFoundException {
+    private void filterTasks() throws IOException, ClassNotFoundException, ParseException {
         Message msg = new Message(Type.FILTER);
 
         System.out.println("Filter by:");
@@ -86,8 +86,11 @@ public class Client implements Runnable {
         switch (option) {
             case 1 -> msg.setCompleted(false);
             case 2 -> {
-                String ExpireDate = readLine("Enter max due date (timestamp): ");
-                msg.setMaxDueDate(new Date(ExpireDate));
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                sdf.setLenient(false);
+
+                String input = readLine("Enter max due date (dd/MM/yyyy HH:mm): ");
+                msg.setMaxDueDate(sdf.parse(input));
             }
             case 3 -> msg.setPriority(readInt("Enter priority (1=Alta,2=Media,3=Baja): "));
             default -> {
@@ -107,24 +110,27 @@ public class Client implements Runnable {
         System.out.print("Descripcion: ");
         String descripcion = scanner.nextLine();
 
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        sdf.setLenient(false);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        String input = readLine("Fecha de vencimiento (timestamp): ");
         Date dueDate;
-        try {
-            dueDate= sdf.parse(input);
-        } catch (ParseException e) {
-            System.out.println("Error: " + e.getMessage());
-            throw new RuntimeException(e);
+        while (true) {
+            String input = readLine("Fecha de vencimiento (dd/MM/yyyy HH:mm): ");
+            try {
+                dueDate = sdf.parse(input);
+                break;
+            } catch (ParseException e) {
+                System.out.println("Invalid date format. Example: 07/01/2026 14:30");
+            }
         }
 
         int prioridad = readInt("Prioridad (1=Alta,2=Media,3=Baja): ");
 
-        // id = 0 → el servidor lo asigna
+        // id = 0 → assigned by server
         Task task = new Task(
                 0,
                 descripcion,
-                Date.from(dueDate.toInstant()),
+                dueDate,
                 prioridad
         );
 
