@@ -163,6 +163,8 @@ public class Client implements Runnable {
                 block.setDataBlock(copyBuffer(buffer, bytesRead));
                 block.setLastBlock(false);
                 out.writeObject(block);
+                out.flush();
+                out.reset();
             }
 
             Message end = new Message(Type.UPLOAD_FILE);
@@ -186,11 +188,17 @@ public class Client implements Runnable {
         System.out.print("Save file as: ");
         String fileName = scanner.nextLine();
 
-        try (FileOutputStream fos = new FileOutputStream(fileName)) {
+        try (FileOutputStream fos = new FileOutputStream(fileName, true)) {
             while (true) {
                 Message block = (Message) in.readObject();
-                if (block.isLastBlock()) break;
-                fos.write(block.getDataBlock());
+                 if (block.getDataBlock() != null) {
+                     fos.write(block.getDataBlock());
+                }
+                   // Cuando llega el mensaje final, se termina
+                if (block.isLastBlock()) {
+                    break;
+                }
+               
             }
         }
 
