@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Scanner;
 
 
-public class Client {
+public class Client implements Runnable {
 
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 5050;
