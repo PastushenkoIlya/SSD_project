@@ -4,9 +4,12 @@ import org.example.common.Message;
 import org.example.common.Message.Type;
 import org.example.common.Task;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import java.io.*;
 import java.net.Socket;
-import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -83,8 +86,8 @@ public class Client implements Runnable {
         switch (option) {
             case 1 -> msg.setCompleted(false);
             case 2 -> {
-                long millis = readLong("Enter max due date (timestamp): ");
-                msg.setMaxDueDate(new Date(millis));
+                String ExpireDate = readLine("Enter max due date (timestamp): ");
+                msg.setMaxDueDate(new Date(ExpireDate));
             }
             case 3 -> msg.setPriority(readInt("Enter priority (1=Alta,2=Media,3=Baja): "));
             default -> {
@@ -104,14 +107,24 @@ public class Client implements Runnable {
         System.out.print("Descripcion: ");
         String descripcion = scanner.nextLine();
 
-        long millis = readLong("Fecha de vencimiento (timestamp): ");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        String input = readLine("Fecha de vencimiento (timestamp): ");
+        Date dueDate;
+        try {
+            dueDate= sdf.parse(input);
+        } catch (ParseException e) {
+            System.out.println("Error: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+
         int prioridad = readInt("Prioridad (1=Alta,2=Media,3=Baja): ");
 
         // id = 0 → el servidor lo asigna
         Task task = new Task(
                 0,
                 descripcion,
-                new Date(millis),
+                Date.from(dueDate.toInstant()),
                 prioridad
         );
 
@@ -249,11 +262,9 @@ public class Client implements Runnable {
         return value;
     }
 
-    private long readLong(String prompt) {
+    private String readLine(String prompt) {
         System.out.print(prompt);
-        long value = scanner.nextLong();
-        scanner.nextLine();
-        return value;
+        return scanner.nextLine();
     }
 
     private byte[] copyBuffer(byte[] buffer, int length) {
