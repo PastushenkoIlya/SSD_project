@@ -77,8 +77,8 @@ public class ClientHandler implements Runnable {
 
         for (Task task : allTasks.values()) {
 
-            if (request.getCompleted() != null &&
-                    task.isCompletada() != request.getCompleted()) {
+            if (request.isCompleted() != null &&
+                    task.isCompletada() != request.isCompleted()) {
                 continue;
             }
 
@@ -137,7 +137,7 @@ public class ClientHandler implements Runnable {
        File operations
        ========================= */
 
-    private void handleUploadFile(Message request) throws IOException {
+    private void handleUploadFile(Message request) throws IOException, ClassNotFoundException {
         int taskId = request.getTaskId();
         String fileName = request.getFileName();
         String extension = fileName.substring(fileName.lastIndexOf('.'));
@@ -149,8 +149,7 @@ public class ClientHandler implements Runnable {
         }
 
         while (true) {
-            Message block = (Message) readObjectSafe();
-
+            Message block = (Message) in.readObject();
             if (block.isLastBlock()) break;
 
             FileManager.guardarFile(
@@ -165,36 +164,16 @@ public class ClientHandler implements Runnable {
 
         Message response = new Message(Type.RESPONSE);
         response.setResult(true);
-
         out.writeObject(response);
         out.flush();
     }
 
+
     private void handleDownloadFile(Message request) throws IOException {
         int taskId = request.getTaskId();
 
-        File file = FileManager.encontrarFile(taskId);
-        if (file == null) {
-            sendError("File not found");
-            return;
-        }
-
-        try (FileInputStream fis = new FileInputStream(file)) {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-
-            while ((bytesRead = fis.read(buffer)) != -1) {
-                Message block = new Message(Type.DOWNLOAD_FILE);
-                block.setDataBlock(copyBuffer(buffer, bytesRead));
-                block.setLastBlock(false);
-                out.writeObject(block);
-            }
-
-            Message end = new Message(Type.DOWNLOAD_FILE);
-            end.setLastBlock(true);
-            out.writeObject(end);
-            out.flush();
-        }
+        // ClientHandler delegates everything
+        FileManager.sendFile(taskId, out);
     }
 
     /* =========================
