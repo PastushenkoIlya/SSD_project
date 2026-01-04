@@ -62,6 +62,8 @@ public class FileManager {
                 block.setDataBlock(copyBuffer(buffer, bytesRead));
                 block.setLastBlock(false);
                 out.writeObject(block);
+                out.flush();
+                out.reset();
             }
 
             Message end = new Message(Type.DOWNLOAD_FILE);

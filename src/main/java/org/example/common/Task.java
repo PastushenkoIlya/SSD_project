@@ -5,7 +5,7 @@ import java.util.Date; //Necesario para usar la clase Date que pide en las espec
 
 public class Task implements Serializable {
 
-    private int id;                     // Identificador unico (asignado por el servidor)
+    private int id;                      // Identificador unico (asignado por el servidor)
     private String descripcion;          // Breve descripcion de la tarea
     private Date fechaVencimiento;       // Fecha y hora límite
     private int prioridad;               // 1=Alta, 2=Media, 3=Baja

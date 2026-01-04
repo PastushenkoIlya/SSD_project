@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 public class Client implements Runnable {
 
-    private static final String SERVER_HOST = "localhost";
+    private static final String SERVER_HOST = "37.230.78.133";
     private static final int SERVER_PORT = 5050;
 
     private final Socket socket;
