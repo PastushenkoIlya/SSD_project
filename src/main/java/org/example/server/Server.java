@@ -70,7 +70,9 @@ public class Server {
     }
 
     //se usa para actualizar el estado "completada" de una tarea
-    public static synchronized void actualizarTask(Task task) {tasks.replace(task.getId(), task);}
+    public static synchronized void actualizarTask(Task task) {
+        tasks.replace(task.getId(), task);
+    }
 
     // Copia de seguridad del HashMap de tareas (persistencia)
     public static synchronized Map<Integer, Task> getAllTasks() {

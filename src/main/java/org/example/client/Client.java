@@ -22,7 +22,7 @@ import java.util.Scanner;
 public class Client implements Runnable {
     //sirve para configurar ip y puerto a que see conecta el cliente -> localhost, ip privada para arrancar ambos dentro de la LAN,
     //ip publica para camprobar caso práctico
-    private static final String SERVER_HOST = "localhost";
+    private static final String SERVER_HOST = "37.230.78.133";
     private static final int SERVER_PORT = 5050;
 
     //creación de objetos utilitarios
