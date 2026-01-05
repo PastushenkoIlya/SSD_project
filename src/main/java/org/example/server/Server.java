@@ -64,12 +64,12 @@ public class Server {
         tasks.remove(id);
     }
 
-    //Get por su id
+    // Get por su id
     public static synchronized Task getTask(int id) {
         return tasks.get(id);
     }
 
-    //se usa para actualizar el estado "completada" de una tarea
+    // Se usa para actualizar el estado "completada" de una tarea
     public static synchronized void actualizarTask(Task task) {
         tasks.replace(task.getId(), task);
     }
