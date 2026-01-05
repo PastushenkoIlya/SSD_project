@@ -201,20 +201,6 @@ public class ClientHandler implements Runnable {
         out.flush();
     }
 
-    private Object readObjectSafe() throws IOException {
-        try {
-            return in.readObject();
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Recibido el objeto incorrecto");
-        }
-    }
-
-    private byte[] copyBuffer(byte[] buffer, int length) {
-        byte[] data = new byte[length];
-        System.arraycopy(buffer, 0, data, 0, length);
-        return data;
-    }
-
     private void close() {
         try {
             socket.close();
