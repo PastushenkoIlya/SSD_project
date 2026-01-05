@@ -48,9 +48,12 @@ public class FileManager {
         return null;
     }
 
-    // send file using Message protocol
+    // Envía al cliente el archivo asociado a una tarea utilizando el protocolo basado en Message
     public static void sendFile(int id, ObjectOutputStream out) throws IOException {
+        // Se busca el archivo correspondiente al ID de la tarea
         File file = encontrarFile(id);
+
+        // Si no existe el archivo, se envía un mensaje de error al cliente
         if (file == null) {
             Message error = new Message(Type.ERROR);
             error.setErrorMessage("File not found");
@@ -59,21 +62,40 @@ public class FileManager {
             return;
         }
 
+        // Se abre un flujo de entrada para leer el archivo desde disco
         try (FileInputStream fis = new FileInputStream(file)) {
+            // Buffer utilizado para leer el archivo por bloques
             byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
 
+            // Lectura del archivo hasta que no queden más datos
             while ((bytesRead = fis.read(buffer)) != -1) {
+
+                // Se crea un mensaje de tipo DOWNLOAD_FILE para cada bloque leído
                 Message block = new Message(Type.DOWNLOAD_FILE);
+
+                // Se copia únicamente la parte válida del buffer
                 block.setDataBlock(copyBuffer(buffer, bytesRead));
+
+                // Se indica que este no es el último bloque
                 block.setLastBlock(false);
+
+                // Se envía el bloque al cliente
                 out.writeObject(block);
                 out.flush();
+
+                // IMPORTANTE:
+                // reset() evita que ObjectOutputStream reutilice objetos ya enviados
+                // y fuerza la serialización completa de cada bloque
                 out.reset();
             }
 
+            // Cuando se han enviado todos los bloques, se envía un mensaje final
             Message end = new Message(Type.DOWNLOAD_FILE);
+
+            // Este mensaje indica explícitamente el final de la transferencia
             end.setLastBlock(true);
+
             out.writeObject(end);
             out.flush();
         }
