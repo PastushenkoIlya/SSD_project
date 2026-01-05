@@ -13,31 +13,45 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Clase Client
+ * Representa la aplicación cliente que se conecta al servidor
+ * y permite al usuario interactuar con el gestor de tareas.
+ */
 
 public class Client implements Runnable {
-
+    //sirve para configurar ip y puerto a que see conecta el cliente -> localhost, ip privada para arrancar ambos dentro de la LAN,
+    //ip publica para camprobar caso práctico
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 5050;
 
+    //creación de objetos utilitarios
     private final Socket socket;
     private final ObjectOutputStream out;
     private final ObjectInputStream in;
     private final Scanner scanner;
 
+    //constructor público, único
     public Client() throws IOException {
+
+        //socket contiene el IP y puerto del servidor
         socket = new Socket(SERVER_HOST, SERVER_PORT);
+        //socket contiene el IPy por tanto es capaz de crear los streams necesarios para la conexión
         out = new ObjectOutputStream(socket.getOutputStream());
         in = new ObjectInputStream(socket.getInputStream());
         scanner = new Scanner(System.in);
     }
 
+    /**
+     * Metodo principal del cliente
+     * Muestra el menú y gestiona las opciones del usuario
+     */
     public void run() {
         boolean exit = false;
 
         while (!exit) {
             printMenu();
-            int option = readInt("Choose an option: ");
-
+            int option = readInt("Elige una opción: ");
             try {
                 switch (option) {
                     case 1 -> listTasks();
@@ -51,38 +65,50 @@ public class Client implements Runnable {
                         sendClose();
                         exit = true;
                     }
-                    default -> System.out.println("Invalid option");
+                    default -> System.out.println("Opción no válida");
                 }
             } catch (Exception e) {
+                // Captura de errores generales durante la ejecución
                 System.err.println("Error: " + e.getMessage());
             }
         }
-
+        // Cierre del socket al salir del programa
         close();
     }
 
     /* =========================
-       Menu operations
+       Menu operaciones
        ========================= */
-
+    /**
+     * Solicita al servidor la lista completa de tareas
+     */
     private void listTasks() throws IOException, ClassNotFoundException {
         Message msg = new Message(Type.LIST);
         out.writeObject(msg);
         out.flush();
 
+        // Recepción de la respuesta del servidor
         Message response = (Message) in.readObject();
         printTaskList(response);
     }
-
+    /**
+     * Solicita al servidor una lista de tareas filtradas
+     *
+     * Hay 3 opciones de filtrado: solamente tareas no completadas, hasta cierta fecha de vencimiento, de una cierta prioridad
+     *
+     */
     private void filterTasks() throws IOException, ClassNotFoundException, ParseException {
+
+        //se crea el mensaje de tipo FILTER que se enviará al servidor
         Message msg = new Message(Type.FILTER);
 
-        System.out.println("Filter by:");
-        System.out.println("1. Pending tasks");
-        System.out.println("2. Max due date");
-        System.out.println("3. Priority");
+        System.out.println("Filtrar por:");
+        System.out.println("1. Tareas pendientes");
+        System.out.println("2. Fecha máxima de vencimiento");
+        System.out.println("3. Prioridad");
 
-        int option = readInt("Choose filter: ");
+        int option = readInt("Elige el filtro: ");
+
 
         switch (option) {
             case 1 -> msg.setCompleted(false);
@@ -90,28 +116,29 @@ public class Client implements Runnable {
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
                 sdf.setLenient(false);
 
-                String input = readLine("Enter max due date (dd/MM/yyyy HH:mm): ");
+                String input = readLine("Introduce la fecha límite (dd/MM/yyyy HH:mm): ");
                 msg.setMaxDueDate(sdf.parse(input));
             }
-            case 3 -> msg.setPriority(readInt("Enter priority (1=Alta,2=Media,3=Baja): "));
+            case 3 -> msg.setPriority(readInt("Introduce la prioridad (1=Alta, 2=Media, 3=Baja): "));
             default -> {
-                System.out.println("Invalid filter");
+                System.out.println("Filtro no válido");
                 return;
             }
         }
-
+        //envío el mensaje creado
         out.writeObject(msg);
         out.flush();
-
+        //escucha del puerto por el que estamos conectados al servidor
         Message response = (Message) in.readObject();
         printTaskList(response);
     }
-
+    /// Crea una nueva tarea y la envía al servidor
     private void createTask() throws IOException {
-        System.out.print("Descripcion: ");
+        System.out.print("Descripción: ");
         String descripcion = scanner.nextLine();
-
+        //clase util de Java que nos sirve para variables de
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        //para evitar problemas con la guardación de hora exácta de fecha límite
         sdf.setLenient(false);
 
         Date dueDate;
@@ -121,13 +148,13 @@ public class Client implements Runnable {
                 dueDate = sdf.parse(input);
                 break;
             } catch (ParseException e) {
-                System.out.println("Invalid date format. Example: 07/01/2026 14:30");
+                System.out.println("Formato de fecha inválido. Ejemplo: 07/01/2026 14:30");
             }
         }
 
         int prioridad = readInt("Prioridad (1=Alta,2=Media,3=Baja): ");
 
-        // id = 0 → assigned by server
+        // El ID se establece en 0 porque lo asigna el servidor
         Task task = new Task(
                 0,
                 descripcion,
@@ -141,29 +168,30 @@ public class Client implements Runnable {
         out.writeObject(msg);
         out.flush();
 
-        System.out.println("Task creation request sent.");
+        System.out.println("Solicitud de eliminación enviada.");
     }
-
+    /// Solicita al servidor eliminar una tarea por ID
     private void deleteTask() throws IOException {
-        int id = readInt("Task ID to delete: ");
+        int id = readInt("ID de la tarea a eliminar: ");
 
         Message msg = new Message(Type.DELETE);
         msg.setTaskId(id);
 
         out.writeObject(msg);
         out.flush();
-
-        System.out.println("Delete request sent.");
+        //no espera ninguna respuesta del servidor
+        System.out.println("Solicitud a eliminar enviada");
     }
 
+    ///Envía un archivo al servidor para adjuntarlo a una tarea
     private void uploadFile() throws IOException {
-        int taskId = readInt("Task ID: ");
-        System.out.print("Local file path: ");
+        int taskId = readInt("ID de la tarea: ");
+        System.out.print("Ruta local del archivo: ");
         String path = scanner.nextLine();
 
         File file = new File(path);
         if (!file.exists()) {
-            System.out.println("File not found.");
+            System.out.println("El archivo no existe.");
             return;
         }
 
@@ -193,7 +221,7 @@ public class Client implements Runnable {
             out.flush();
         }
 
-        System.out.println("File uploaded.");
+        System.out.println("Archivo subido correctamente.");
     }
 
     private void downloadFile() throws IOException, ClassNotFoundException {
@@ -205,7 +233,7 @@ public class Client implements Runnable {
         out.writeObject(msg);
         out.flush();
 
-        System.out.print("Save file as: ");
+        System.out.print("Guardar archivo como: ");
         String fileName = scanner.nextLine();
 
         try (FileOutputStream fos = new FileOutputStream(fileName, true)) {
@@ -222,52 +250,56 @@ public class Client implements Runnable {
             }
         }
 
-        System.out.println("File downloaded.");
+        System.out.println("Archivo descargado correctamente.");
     }
 
     private void changeState() throws IOException {
-        int taskId = readInt("Task ID: ");
+        int taskId = readInt("ID de la tarea: ");
 
-        System.out.print("Mark as completed? (true/false): ");
+        System.out.print("Marcar como completada (true/false): ");
         boolean completed = Boolean.parseBoolean(scanner.nextLine());
 
+        //se crea el mensaje saliente al servidor con ID de la tarea y el estado deseado de la tarea
         Message msg = new Message(Type.CHANGE_STATE);
         msg.setTaskId(taskId);
         msg.setCompleted(completed);
 
+        //envío de la tarea
         out.writeObject(msg);
         out.flush();
 
-        System.out.println("Task state change request sent.");
+        System.out.println("Solicitud de cambio de estado enviada.");
     }
 
-    /* =========================
-       Utility methods
+     /* =========================
+       Métodos auxiliares
        ========================= */
 
+    /// Envía al servidor un mensaje de cierre de conexión
     private void sendClose() throws IOException {
         out.writeObject(new Message(Type.CLOSE));
         out.flush();
     }
-
+    /// Cierra el socket del cliente
     private void close() {
         try {
             socket.close();
         } catch (IOException ignored) {}
     }
 
+    /// Muestra el menú principal del cliente
     private void printMenu() {
-        System.out.println("\n--- TASK MANAGER CLIENT ---");
-        System.out.println("1. List tasks");
-        System.out.println("2. Filter tasks");
-        System.out.println("3. Create task");
-        System.out.println("4. Delete task");
-        System.out.println("5. Upload file");
-        System.out.println("6. Download file");
-        System.out.println("7. Change task state (completed / not completed)");
-        System.out.println("0. Exit");
-    }
-
+         System.out.println("\n--- CLIENTE GESTOR DE TAREAS ---");
+        System.out.println("1. Listar tareas");
+        System.out.println("2. Filtrar tareas");
+        System.out.println("3. Crear tarea");
+        System.out.println("4. Eliminar tarea");
+        System.out.println("5. Subir archivo");
+        System.out.println("6. Descargar archivo");
+        System.out.println("7. Cambiar estado de la tarea (completada / no completada)");
+        System.out.println("0. Salir");
+}
+    ///Imprime por consola la lista de tareas recibida del servidor
     @SuppressWarnings("unchecked")
     private void printTaskList(Message response) {
         Object result = response.getResult();
@@ -275,22 +307,22 @@ public class Client implements Runnable {
             List<Task> tasks = (List<Task>) result;
             tasks.forEach(System.out::println);
         } else {
-            System.out.println("No tasks received.");
+            System.out.println("No se recibieron tareas.");
         }
     }
-
+    //Lee un entero desde consola mostrando un mensaje
     private int readInt(String prompt) {
         System.out.print(prompt);
         int value = scanner.nextInt();
         scanner.nextLine();
         return value;
     }
-
+    // Lee una línea de texto desde consola mostrando un mensaje
     private String readLine(String prompt) {
         System.out.print(prompt);
         return scanner.nextLine();
     }
-
+    //Copia un buffer de bytes con el tamaño exacto leído
     private byte[] copyBuffer(byte[] buffer, int length) {
         byte[] data = new byte[length];
         System.arraycopy(buffer, 0, data, 0, length);

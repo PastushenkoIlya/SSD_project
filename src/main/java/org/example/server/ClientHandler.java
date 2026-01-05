@@ -46,12 +46,12 @@ public class ClientHandler implements Runnable {
                     case CHANGE_STATE -> handleChangeState(request);
                     case CLOSE -> connected = false;
 
-                    default -> sendError("Unknown request type");
+                    default -> sendError("Tipo de petición desconocida");
                 }
             }
 
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Client disconnected");
+            System.out.println("Cliente desconectado");
         } finally {
             close();
         }
@@ -148,7 +148,7 @@ public class ClientHandler implements Runnable {
 
         Task task = Server.getTask(taskId);
         if (task == null) {
-            sendError("Task not found");
+            sendError("Tarea no encontrada");
             return;
         }
 
@@ -186,7 +186,7 @@ public class ClientHandler implements Runnable {
         if (task != null) {
             task.setCompletada(completed);
             Server.actualizarTask(task);
-            System.out.println("Completada changed");
+            System.out.println("Cambiado el estado \"completado\" de la tarea");
         }
     }
 
@@ -205,7 +205,7 @@ public class ClientHandler implements Runnable {
         try {
             return in.readObject();
         } catch (ClassNotFoundException e) {
-            throw new IOException("Invalid object received");
+            throw new IOException("Recibido el objeto incorrecto");
         }
     }
 
