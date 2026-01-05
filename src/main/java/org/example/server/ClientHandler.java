@@ -43,6 +43,7 @@ public class ClientHandler implements Runnable {
                     case DELETE -> handleDelete(request);
                     case UPLOAD_FILE -> handleUploadFile(request);
                     case DOWNLOAD_FILE -> handleDownloadFile(request);
+                    case CHANGE_STATE -> handleChangeState(request);
                     case CLOSE -> connected = false;
 
                     default -> sendError("Unknown request type");
@@ -56,6 +57,8 @@ public class ClientHandler implements Runnable {
         }
     }
 
+
+
     /* =========================
        Task operations
        ========================= */
@@ -67,6 +70,7 @@ public class ClientHandler implements Runnable {
         Message response = new Message(Type.RESPONSE);
         response.setResult(list);
 
+        out.reset(); // <-- force re-serialization or in other words: avoid cached objects
         out.writeObject(response);
         out.flush();
     }
@@ -174,6 +178,16 @@ public class ClientHandler implements Runnable {
 
         // ClientHandler delegates everything
         FileManager.sendFile(taskId, out);
+    }
+    private void handleChangeState(Message request) { int id = request.getTaskId();
+        boolean completed = request.isCompleted();
+
+        Task task = Server.getTask(id);
+        if (task != null) {
+            task.setCompletada(completed);
+            Server.actualizarTask(task);
+            System.out.println("Completada changed");
+        }
     }
 
     /* =========================

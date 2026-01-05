@@ -17,6 +17,7 @@ public class Message implements Serializable {
         DELETE,
         UPLOAD_FILE,
         DOWNLOAD_FILE,
+        CHANGE_STATE,
         RESPONSE,
         ERROR,
         CLOSE

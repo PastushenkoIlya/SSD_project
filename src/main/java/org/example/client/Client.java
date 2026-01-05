@@ -16,7 +16,7 @@ import java.util.Scanner;
 
 public class Client implements Runnable {
 
-    private static final String SERVER_HOST = "37.230.78.133";
+    private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 5050;
 
     private final Socket socket;
@@ -46,6 +46,7 @@ public class Client implements Runnable {
                     case 4 -> deleteTask();
                     case 5 -> uploadFile();
                     case 6 -> downloadFile();
+                    case 7 -> changeState();
                     case 0 -> {
                         sendClose();
                         exit = true;
@@ -224,6 +225,22 @@ public class Client implements Runnable {
         System.out.println("File downloaded.");
     }
 
+    private void changeState() throws IOException {
+        int taskId = readInt("Task ID: ");
+
+        System.out.print("Mark as completed? (true/false): ");
+        boolean completed = Boolean.parseBoolean(scanner.nextLine());
+
+        Message msg = new Message(Type.CHANGE_STATE);
+        msg.setTaskId(taskId);
+        msg.setCompleted(completed);
+
+        out.writeObject(msg);
+        out.flush();
+
+        System.out.println("Task state change request sent.");
+    }
+
     /* =========================
        Utility methods
        ========================= */
@@ -247,6 +264,7 @@ public class Client implements Runnable {
         System.out.println("4. Delete task");
         System.out.println("5. Upload file");
         System.out.println("6. Download file");
+        System.out.println("7. Change task state (completed / not completed)");
         System.out.println("0. Exit");
     }
 
