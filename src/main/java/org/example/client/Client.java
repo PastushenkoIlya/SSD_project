@@ -93,7 +93,7 @@ public class Client implements Runnable {
     }
     /**
      * Solicita al servidor una lista de tareas filtradas
-     *
+
      * Hay 3 opciones de filtrado: solamente tareas no completadas, hasta cierta fecha de vencimiento, de una cierta prioridad
      *
      */
@@ -168,7 +168,7 @@ public class Client implements Runnable {
         out.writeObject(msg);
         out.flush();
 
-        System.out.println("Solicitud de eliminación enviada.");
+        System.out.println("Solicitud de creación enviada.");
     }
     /// Solicita al servidor eliminar una tarea por ID
     private void deleteTask() throws IOException {

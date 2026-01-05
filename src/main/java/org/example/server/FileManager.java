@@ -5,12 +5,13 @@ import org.example.common.Message.Type;
 
 import java.io.*;
 
+// Clase que se encarga de gestionar los archivos
 public class FileManager {
 
-    private static final String DIRECTORIO = "archivosTareas/";
-    private static final int BUFFER_SIZE = 4096;
+    private static final String DIRECTORIO = "archivosTareas/"; //nombre del directorio donde se guardan los archivos
+    private static final int BUFFER_SIZE = 4096; //tamaño del buffer para leer/escribir archivos en bloques
 
-    // Ensure directory exists
+    // Metodo que asegura que el directorio para los archivos existe
     private static void existeDirectorio() {
         File dir = new File(DIRECTORIO);
         if (!dir.exists()) {
@@ -18,22 +19,27 @@ public class FileManager {
         }
     }
 
-    // Save file blocks
+    // Guarda un archivo en bloques
     public static void guardarFile(int id, String extension, byte[] buffer, int bytesRead) throws IOException {
+        // Asegurarse de que el directorio existe
         existeDirectorio();
+
+        // Crear el archivo con el ID de la tarea y la extension
         File file = new File(DIRECTORIO + id + extension);
 
+        // Escribimos por bloques
         try (FileOutputStream fos = new FileOutputStream(file, true)) {
             fos.write(buffer, 0, bytesRead);
         }
     }
 
-    // INTERNAL: find file by task id
+    // Buscar un archivo por su id de tarea
     private static File encontrarFile(int id) {
         File dir = new File(DIRECTORIO);
+        // Lista todos los archivos en el directorio
         File[] files = dir.listFiles();
         if (files == null) return null;
-
+        // Recorre los archivos buscando el que empieza con el id de la tarea
         for (File f : files) {
             if (f.getName().startsWith(String.valueOf(id))) {
                 return f;
